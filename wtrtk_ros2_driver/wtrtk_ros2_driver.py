@@ -1,8 +1,9 @@
 import serial
 import time
+import signal
+import sys
 
 import rclpy
-from rclpy.parameter import Parameter
 from rclpy.node import Node
 
 from nmea_msgs.msg import Sentence
@@ -170,7 +171,7 @@ class WtrtkRos2Driver(Node):
                     break
                 if time.monotonic() - start > 1:
                     raise TimeoutError("Command failed")
-        except TimeoutError:  ## 처리안하고 이 함수를 호출한쪽으로 던져주고싶음
+        except TimeoutError:
             raise
 
         except Exception as e:
@@ -208,10 +209,32 @@ class WtrtkRos2Driver(Node):
         self._gps.write(byte_data)
 
 
-def main(args=None):
-    rclpy.init(args=args)
+def sigint_handler_int(signal_received, frame):
+    global node
 
-    node = None
+    node.get_logger().warn("Shutting down node...")
+
+    node._stop_log()
+
+    node.destroy_node()
+    sys.exit(0)
+
+
+def sigint_handler_term(signal_received, frame):
+    pass  # ignore
+
+
+node = None
+
+
+def main(args=None):
+    global node
+    rclpy.init(args=args)
+    rclpy.signals.uninstall_signal_handlers()
+
+    signal.signal(signal.SIGINT, sigint_handler_int)
+    signal.signal(signal.SIGTERM, sigint_handler_term)
+
     try:
         node = WtrtkRos2Driver()
         rclpy.spin(node)
