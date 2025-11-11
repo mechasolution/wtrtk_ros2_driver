@@ -102,8 +102,9 @@ class WtrtkRos2Driver(Node):
 
         self._connect_serial()
 
-        self._reset_module()
-        self.get_logger().info("Restart GPS module done")
+        self._stop_log()
+
+        self.get_logger().info("Configureing GPS module...")
 
         self._send_command("MODE ROVER AUTOMOTIVE DEFAULT")
 
@@ -113,36 +114,22 @@ class WtrtkRos2Driver(Node):
 
         self._timer_hd.reset()
 
-    def _reset_module(self):
+    def _stop_log(self):
         self._send_command("")
 
         MAX_RETRIES = 20
         for attempt in range(1, MAX_RETRIES + 1):
             try:
                 self.get_logger().info(
-                    f"Restarting GPS module... attempt {attempt}/{MAX_RETRIES}"
+                    f"Stopping log... attempt {attempt}/{MAX_RETRIES}"
                 )
-                self._send_command("RESET")
+                self._send_command("UNLOG")
                 break
             except TimeoutError:
                 if attempt == MAX_RETRIES:
-                    raise TimeoutError("Rebooting failed")
+                    raise TimeoutError("Stopping log failed")
         else:
-            raise TimeoutError("Rebooting failed")
-
-        try:
-            start = time.monotonic()
-            while True:
-                data = self._gps.readline().decode("utf-8", errors="ignore").strip()
-                if f"COM" in data:
-                    break
-                if time.monotonic() - start > 10:
-                    raise TimeoutError("Rebooting timeout")
-
-        except Exception as e:
-            self.get_logger().fatal(f"Unexpected error: {e}")
-            self.get_logger().fatal("Shutting down node...")
-            exit()
+            raise TimeoutError("Stop log failed")
 
     def _connect_serial(self):
         self._is_first_data_rcv = False
