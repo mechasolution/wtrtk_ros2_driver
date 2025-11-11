@@ -108,9 +108,8 @@ class WtrtkRos2Driver(Node):
         self._send_command("MODE ROVER AUTOMOTIVE DEFAULT")
 
         self._send_command(f"GNGGA {period}")
-        self._send_command(f"GNRMC {period}")
-        self._send_command(f"GNGSA {period}")
-        self._send_command(f"GNGSV {period}")
+        self._send_command(f"GPGST {period}")
+        self._send_command(f"GPVTG {period}")
 
         self._timer_hd.reset()
 
