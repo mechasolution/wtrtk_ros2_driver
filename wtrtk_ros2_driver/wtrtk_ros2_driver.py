@@ -105,7 +105,7 @@ class WtrtkRos2Driver(Node):
         self._reset_module()
         self.get_logger().info("Restart GPS module done")
 
-        self._send_command("MODE ROVER UAV DEFAULT")
+        self._send_command("MODE ROVER AUTOMOTIVE DEFAULT")
 
         self._send_command(f"GNGGA {period}")
         self._send_command(f"GNRMC {period}")
